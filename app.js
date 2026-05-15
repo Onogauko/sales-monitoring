@@ -3,49 +3,43 @@ let salesData = [];
 function rupiah(number){
 
   return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR'
+
+    style:'currency',
+    currency:'IDR'
+
   }).format(number);
 
 }
 
-// INIT CHART
+// CHART
 
-const canvas = document.getElementById('salesChart');
+const chartCanvas =
+document.getElementById('salesChart');
 
-let salesChart = null;
+const salesChart = new Chart(chartCanvas, {
 
-if(canvas){
+  type:'line',
 
-  salesChart = new Chart(canvas, {
+  data:{
+    labels:[],
+    datasets:[{
+      label:'Sales',
+      data:[],
+      borderWidth:2
+    }]
+  }
 
-    type:'line',
+});
 
-    data:{
-      labels:[],
-      datasets:[{
-        label:'Sales',
-        data:[],
-        borderWidth:2
-      }]
-    }
+// CSV UPLOAD
 
-  });
-
-}
-
-// UPLOAD CSV
-
-const csvInput =
-document.getElementById('csvFile');
-
-csvInput.addEventListener('change', function(e){
+document
+.getElementById('csvFile')
+.addEventListener('change', function(e){
 
   const file = e.target.files[0];
 
-  if(!file){
-    return;
-  }
+  if(!file) return;
 
   Papa.parse(file, {
 
@@ -55,17 +49,13 @@ csvInput.addEventListener('change', function(e){
 
     complete:function(results){
 
-      console.log(results.data);
-
       salesData = [];
 
       for(let i = 9; i < results.data.length; i++){
 
         const row = results.data[i];
 
-        if(!row || !row[5]){
-          continue;
-        }
+        if(!row || !row[5]) continue;
 
         salesData.push({
 
@@ -89,9 +79,7 @@ csvInput.addEventListener('change', function(e){
 
       }
 
-      console.log("DATA MASUK:", salesData.length);
-
-      renderDashboard();
+      renderDashboard(salesData);
 
     }
 
@@ -99,19 +87,49 @@ csvInput.addEventListener('change', function(e){
 
 });
 
+// SEARCH
+
+document
+.getElementById('searchInput')
+.addEventListener('input', function(){
+
+  const keyword =
+  this.value.toLowerCase();
+
+  const filtered =
+  salesData.filter(item => {
+
+    return (
+      item.sku.toLowerCase()
+      .includes(keyword)
+
+      ||
+
+      item.itemName.toLowerCase()
+      .includes(keyword)
+    );
+
+  });
+
+  renderDashboard(filtered);
+
+});
+
 // RENDER
 
-function renderDashboard(){
+function renderDashboard(data){
+
+  // TOTAL
 
   let totalSales = 0;
 
   let totalQty = 0;
 
-  const dailySales = {};
-
   const itemMap = {};
 
-  salesData.forEach(item => {
+  const dailySales = {};
+
+  data.forEach(item => {
 
     totalSales += item.amount;
 
@@ -120,7 +138,9 @@ function renderDashboard(){
     // chart
 
     if(!dailySales[item.date]){
+
       dailySales[item.date] = 0;
+
     }
 
     dailySales[item.date] += item.amount;
@@ -147,7 +167,7 @@ function renderDashboard(){
 
   });
 
-  // cards
+  // CARDS
 
   document.getElementById('totalSales')
   .innerText = rupiah(totalSales);
@@ -159,23 +179,19 @@ function renderDashboard(){
   .innerText = Object.keys(itemMap).length;
 
   document.getElementById('totalItem')
-  .innerText = salesData.length;
+  .innerText = data.length;
 
-  // chart
+  // CHART
 
-  if(salesChart){
+  salesChart.data.labels =
+  Object.keys(dailySales);
 
-    salesChart.data.labels =
-    Object.keys(dailySales);
+  salesChart.data.datasets[0].data =
+  Object.values(dailySales);
 
-    salesChart.data.datasets[0].data =
-    Object.values(dailySales);
+  salesChart.update();
 
-    salesChart.update();
-
-  }
-
-  // table
+  // TABLE
 
   const salesTable =
   document.getElementById('salesTable');
@@ -184,7 +200,9 @@ function renderDashboard(){
 
   const sortedItems =
   Object.entries(itemMap)
-  .sort((a,b) => b[1].amount - a[1].amount)
+  .sort((a,b)=>
+    b[1].amount - a[1].amount
+  )
   .slice(0,100);
 
   sortedItems.forEach(item => {
