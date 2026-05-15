@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Sales Monitoring</title>
+  <title>Sales Monitoring Dashboard</title>
 
   <link rel="stylesheet" href="style.css">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-</head>
 
+</head>
 <body>
 
   <div class="container">
@@ -20,23 +19,31 @@
     <h1>Sales Monitoring Dashboard</h1>
 
     <div class="card">
+
       <h2>Total Sales</h2>
+
       <p id="totalSales">Rp 0</p>
+
     </div>
 
-    <div class="card">
-      <h2>Upload CSV</h2>
+    <div class="upload-box">
 
-      <input type="file" id="csvFile">
+      <input type="file" id="csvFile" accept=".csv">
+
     </div>
 
-    <div class="card">
+    <div class="chart-card">
+
       <canvas id="salesChart"></canvas>
+
     </div>
+
+    <h2>Top 10 Item</h2>
+
+    <div id="topItems"></div>
 
   </div>
 
-  <script type="module" src="firebase.js"></script>
   <script type="module" src="app.js"></script>
 
 </body>
