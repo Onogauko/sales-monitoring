@@ -8,43 +8,67 @@
   <link rel="stylesheet" href="style.css">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
 </head>
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <h1>Sales Monitoring Dashboard</h1>
+  <div class="topbar">
+    <div>
+      <h1>Sales Monitoring</h1>
+      <p class="subtitle">Realtime CSV Analytics Dashboard</p>
+    </div>
+
+    <label class="upload-btn">
+      Upload CSV
+      <input type="file" id="csvFile" accept=".csv">
+    </label>
+  </div>
+
+  <div class="cards">
 
     <div class="card">
-
-      <h2>Total Sales</h2>
-
-      <p id="totalSales">Rp 0</p>
-
+      <span>Total Sales</span>
+      <h2 id="totalSales">Rp 0</h2>
     </div>
 
-    <div class="upload-box">
-
-      <input type="file" id="csvFile" accept=".csv">
-
+    <div class="card">
+      <span>Total Qty</span>
+      <h2 id="totalQty">0</h2>
     </div>
 
-    <div class="chart-card">
-
-      <canvas id="salesChart"></canvas>
-
+    <div class="card">
+      <span>Total SKU</span>
+      <h2 id="totalSku">0</h2>
     </div>
 
-    <h2>Top 10 Item</h2>
-
-    <div id="topItems"></div>
+    <div class="card">
+      <span>Total Item</span>
+      <h2 id="totalItem">0</h2>
+    </div>
 
   </div>
 
-  <script type="module" src="app.js"></script>
+  <div class="filter-box">
 
-</body>
+    <input type="date" id="startDate">
+
+    <input type="date" id="endDate">
+
+    <input type="text" id="searchItem" placeholder="Search SKU / Item Name">
+
+    <button id="filterBtn">Filter</button>
+
+  </div>
+
+  <div class="chart-box">
+    <canvas id="salesChart"></canvas>
+  </div>
+
+  <div class="table-box">
+
+    <div class="table-header">
+      <h2>Sales By Item</h2>
+    </div>
 </html>
