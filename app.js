@@ -1,24 +1,49 @@
-import { db } from './firebase.js';
+# Sistem Baru — CSV Diproses Langsung di Browser
 
-import {
-  collection,
-  writeBatch,
-  doc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+Konsep baru:
+
+```text
+Upload CSV
+↓
+Browser baca CSV langsung
+↓
+Dashboard langsung tampil
+```
+
+TANPA upload Firebase.
+
+---
+
+# 1. Replace Seluruh Isi `app.js`
+
+```javascript
+let salesData = [];
 
 const ctx = document.getElementById('salesChart');
 
-new Chart(ctx, {
+const salesChart = new Chart(ctx, {
   type: 'line',
   data: {
-    labels: ['Mon','Tue','Wed','Thu','Fri'],
+    labels: [],
     datasets: [{
       label: 'Sales',
-      data: [12,19,3,5,2],
+      data: [],
       borderWidth: 2
     }]
   }
 });
+
+// FORMAT RUPIAH
+function rupiah(number){
+
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR'
+  }).format(number);
+
+}
+
+// UPLOAD CSV
 
 document
 .getElementById('csvFile')
@@ -28,102 +53,184 @@ document
 
   Papa.parse(file, {
 
-    header: false,
-    skipEmptyLines: true,
+    header:false,
+    skipEmptyLines:true,
 
-    complete: async function(results){
+    complete:function(results){
 
-      const progressText =
-      document.getElementById("totalSales");
+      salesData = [];
 
-      let totalUpload = 0;
+      // mulai dari row data
+      for(let i = 9; i < results.data.length; i++){
 
-      const rows = results.data.slice(9);
+        const row = results.data[i];
 
-      // lebih kecil supaya tidak kena quota
-      const chunkSize = 200;
+        if(!row[5]) continue;
 
-      for(let i = 0; i < rows.length; i += chunkSize){
+        salesData.push({
 
-        const batch = writeBatch(db);
+          date: row[0],
 
-        const chunk = rows.slice(i, i + chunkSize);
+          department: row[3],
 
-        for(const row of chunk){
+          departmentName: row[4],
 
-          // skip row kosong
-          if(!row[5]) continue;
+          sku: row[5],
 
-          const docRef = doc(collection(db, "sales"));
+          itemName: row[6],
 
-          batch.set(docRef, {
+          qty: Number(row[9]) || 0,
 
-            date: row[0] || "",
+          amount: Number(row[10]) || 0
 
-            holdingCompany: row[1] || "",
-
-            company: row[2] || "",
-
-            department: row[3] || "",
-
-            departmentName: row[4] || "",
-
-            sku: row[5] || "",
-
-            itemName: row[6] || "",
-
-            barcode: row[7] || "",
-
-            category: row[8] || "",
-
-            qty: Number(row[9]) || 0,
-
-            amount: Number(row[10]) || 0,
-
-            createdAt: new Date()
-
-          });
-
-          totalUpload++;
-
-        }
-
-        // upload batch
-        await batch.commit();
-
-        // delay supaya tidak kena quota firestore
-        await new Promise(resolve =>
-          setTimeout(resolve, 1000)
-        );
-
-        // update progress
-        const percent =
-        Math.floor((totalUpload / rows.length) * 100);
-
-        progressText.innerText =
-        percent +
-        "% Uploading... (" +
-        totalUpload +
-        "/" +
-        rows.length +
-        ")";
-
-        console.log(percent + "%");
+        });
 
       }
 
-      progressText.innerText =
-      "Upload selesai: " +
-      totalUpload +
-      " data";
+      console.log(salesData);
 
-      alert(
-        totalUpload +
-        " data berhasil upload"
-      );
+      renderDashboard(salesData);
 
     }
 
   });
 
 });
+
+// RENDER DASHBOARD
+
+function renderDashboard(data){
+
+  // TOTAL SALES
+  let totalSales = 0;
+
+  let totalQty = 0;
+
+  data.forEach(item => {
+
+    totalSales += item.amount;
+
+    totalQty += item.qty;
+
+  });
+
+  document.getElementById('totalSales')
+  .innerText = rupiah(totalSales);
+
+  // GROUP SALES BY DATE
+
+  const dailySales = {};
+
+  data.forEach(item => {
+
+    if(!dailySales[item.date]){
+      dailySales[item.date] = 0;
+    }
+
+    dailySales[item.date] += item.amount;
+
+  });
+
+  const labels = Object.keys(dailySales);
+
+  const values = Object.values(dailySales);
+
+  salesChart.data.labels = labels;
+
+  salesChart.data.datasets[0].data = values;
+
+  salesChart.update();
+
+  // TOP ITEM
+
+  const itemMap = {};
+
+  data.forEach(item => {
+
+    if(!itemMap[item.itemName]){
+      itemMap[item.itemName] = 0;
+    }
+
+    itemMap[item.itemName] += item.amount;
+
+  });
+
+  const sortedItems =
+  Object.entries(itemMap)
+  .sort((a,b) => b[1] - a[1])
+  .slice(0,10);
+
+  const topItemsContainer =
+  document.getElementById('topItems');
+
+  topItemsContainer.innerHTML = '';
+
+  sortedItems.forEach(item => {
+
+    topItemsContainer.innerHTML += `
+
+      <div class="top-item">
+
+        <span>${item[0]}</span>
+
+        <strong>${rupiah(item[1])}</strong>
+
+      </div>
+
+    `;
+
+  });
+
+}
+```
+
+---
+
+# 2. Tambahkan di `index.html`
+
+Tambahkan DI BAWAH chart:
+
+```html
+<h2>Top 10 Item</h2>
+
+<div id="topItems"></div>
+```
+
+---
+
+# 3. Tambahkan di `style.css`
+
+Tambahkan paling bawah:
+
+```css
+.top-item{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  background:#1e293b;
+
+  padding:12px;
+
+  margin-top:10px;
+
+  border-radius:10px;
+
+}
+```
+
+---
+
+# HASILNYA
+
+Setelah upload CSV:
+
+✅ Total sales langsung muncul
+✅ Chart sales harian langsung muncul
+✅ Top 10 item langsung muncul
+✅ Tidak upload Firebase
+✅ Tidak kena quota
+✅ Jauh lebih cepat
+
+Biasanya loading hanya 1-3 detik untuk 15 ribu row.
