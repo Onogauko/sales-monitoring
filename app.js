@@ -27,7 +27,8 @@ document
 
   Papa.parse(file, {
 
-    header:true,
+    header: false,
+    skipEmptyLines: true,
 
     complete: async function(results){
 
@@ -35,27 +36,38 @@ document
 
       let totalUpload = 0;
 
-      for(const item of results.data){
+      // mulai dari row data asli
+      for(let i = 9; i < results.data.length; i++){
 
-        if(!item.Item) continue;
+        const row = results.data[i];
+
+        if(!row[5]) continue;
 
         try{
 
           await addDoc(collection(db, "sales"), {
 
-            date: item.Date || "",
+            date: row[0],
 
-            sku: item.Item || "",
+            holdingCompany: row[1],
 
-            itemName: item["Item Name"] || "",
+            company: row[2],
 
-            department: item.Department || "",
+            department: row[3],
 
-            departmentName: item["Department Desc"] || "",
+            departmentName: row[4],
 
-            qty: Number(item["Sales Qty"]) || 0,
+            sku: row[5],
 
-            amount: Number(item["Sales Amount"]) || 0,
+            itemName: row[6],
+
+            barcode: row[7],
+
+            category: row[8],
+
+            qty: Number(row[9]) || 0,
+
+            amount: Number(row[10]) || 0,
 
             createdAt: new Date()
 
@@ -63,7 +75,7 @@ document
 
           totalUpload++;
 
-          console.log("Uploaded:", item.Item);
+          console.log("Uploaded:", row[5]);
 
         }catch(error){
 
