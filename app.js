@@ -2,7 +2,8 @@ import { db } from './firebase.js';
 
 import {
   collection,
-  addDoc
+  writeBatch,
+  doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const ctx = document.getElementById('salesChart');
@@ -32,38 +33,46 @@ document
 
     complete: async function(results){
 
-      console.log(results.data);
+      const progressText =
+      document.getElementById("totalSales");
 
       let totalUpload = 0;
 
-      // mulai dari row data asli
-      for(let i = 9; i < results.data.length; i++){
+      const rows = results.data.slice(9);
 
-        const row = results.data[i];
+      const chunkSize = 500;
 
-        if(!row[5]) continue;
+      for(let i = 0; i < rows.length; i += chunkSize){
 
-        try{
+        const batch = writeBatch(db);
 
-          await addDoc(collection(db, "sales"), {
+        const chunk = rows.slice(i, i + chunkSize);
 
-            date: row[0],
+        for(const row of chunk){
 
-            holdingCompany: row[1],
+          if(!row[5]) continue;
 
-            company: row[2],
+          const docRef = doc(collection(db, "sales"));
 
-            department: row[3],
+          batch.set(docRef, {
 
-            departmentName: row[4],
+            date: row[0] || "",
 
-            sku: row[5],
+            holdingCompany: row[1] || "",
 
-            itemName: row[6],
+            company: row[2] || "",
 
-            barcode: row[7],
+            department: row[3] || "",
 
-            category: row[8],
+            departmentName: row[4] || "",
+
+            sku: row[5] || "",
+
+            itemName: row[6] || "",
+
+            barcode: row[7] || "",
+
+            category: row[8] || "",
 
             qty: Number(row[9]) || 0,
 
@@ -75,17 +84,33 @@ document
 
           totalUpload++;
 
-          console.log("Uploaded:", row[5]);
-
-        }catch(error){
-
-          console.error(error);
-
         }
+
+        await batch.commit();
+
+        const percent =
+        Math.floor((totalUpload / rows.length) * 100);
+
+        progressText.innerText =
+        percent + "% Uploading... (" +
+        totalUpload +
+        "/" +
+        rows.length +
+        ")";
+
+        console.log(percent + "%");
 
       }
 
-      alert(totalUpload + " data berhasil upload ke Firebase");
+      progressText.innerText =
+      "Upload selesai: " +
+      totalUpload +
+      " data";
+
+      alert(
+        totalUpload +
+        " data berhasil upload"
+      );
 
     }
 
