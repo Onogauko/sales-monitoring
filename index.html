@@ -3,27 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sales Monitoring Dashboard</title>
+
+  <title>Sales Monitoring</title>
 
   <link rel="stylesheet" href="style.css">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
 </head>
 <body>
 
 <div class="container">
 
   <div class="topbar">
+
     <div>
       <h1>Sales Monitoring</h1>
-      <p class="subtitle">Realtime CSV Analytics Dashboard</p>
+      <p class="subtitle">
+        CSV Analytics Dashboard
+      </p>
     </div>
 
     <label class="upload-btn">
+
       Upload CSV
-      <input type="file" id="csvFile" accept=".csv">
+
+      <input
+        type="file"
+        id="csvFile"
+        accept=".csv"
+      >
+
     </label>
+
   </div>
 
   <div class="cards">
@@ -50,25 +64,48 @@
 
   </div>
 
-  <div class="filter-box">
+  <div class="search-box">
 
-    <input type="date" id="startDate">
-
-    <input type="date" id="endDate">
-
-    <input type="text" id="searchItem" placeholder="Search SKU / Item Name">
-
-    <button id="filterBtn">Filter</button>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search SKU / Item Name"
+    >
 
   </div>
 
   <div class="chart-box">
+
     <canvas id="salesChart"></canvas>
+
   </div>
 
   <div class="table-box">
 
-    <div class="table-header">
-      <h2>Sales By Item</h2>
-    </div>
+    <h2>Sales By Item</h2>
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>SKU</th>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Sales</th>
+        </tr>
+
+      </thead>
+
+      <tbody id="salesTable"></tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
 </html>
