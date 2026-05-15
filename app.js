@@ -1,22 +1,3 @@
-# Sistem Baru — CSV Diproses Langsung di Browser
-
-Konsep baru:
-
-```text
-Upload CSV
-↓
-Browser baca CSV langsung
-↓
-Dashboard langsung tampil
-```
-
-TANPA upload Firebase.
-
----
-
-# 1. Replace Seluruh Isi `app.js`
-
-```javascript
 let salesData = [];
 
 const ctx = document.getElementById('salesChart');
@@ -34,6 +15,7 @@ const salesChart = new Chart(ctx, {
 });
 
 // FORMAT RUPIAH
+
 function rupiah(number){
 
   return new Intl.NumberFormat('id-ID', {
@@ -60,7 +42,7 @@ document
 
       salesData = [];
 
-      // mulai dari row data
+      // mulai dari row data asli
       for(let i = 9; i < results.data.length; i++){
 
         const row = results.data[i];
@@ -102,6 +84,7 @@ document
 function renderDashboard(data){
 
   // TOTAL SALES
+
   let totalSales = 0;
 
   let totalQty = 0;
@@ -117,7 +100,7 @@ function renderDashboard(data){
   document.getElementById('totalSales')
   .innerText = rupiah(totalSales);
 
-  // GROUP SALES BY DATE
+  // SALES BY DATE
 
   const dailySales = {};
 
@@ -182,55 +165,3 @@ function renderDashboard(data){
   });
 
 }
-```
-
----
-
-# 2. Tambahkan di `index.html`
-
-Tambahkan DI BAWAH chart:
-
-```html
-<h2>Top 10 Item</h2>
-
-<div id="topItems"></div>
-```
-
----
-
-# 3. Tambahkan di `style.css`
-
-Tambahkan paling bawah:
-
-```css
-.top-item{
-
-  display:flex;
-
-  justify-content:space-between;
-
-  background:#1e293b;
-
-  padding:12px;
-
-  margin-top:10px;
-
-  border-radius:10px;
-
-}
-```
-
----
-
-# HASILNYA
-
-Setelah upload CSV:
-
-✅ Total sales langsung muncul
-✅ Chart sales harian langsung muncul
-✅ Top 10 item langsung muncul
-✅ Tidak upload Firebase
-✅ Tidak kena quota
-✅ Jauh lebih cepat
-
-Biasanya loading hanya 1-3 detik untuk 15 ribu row.
