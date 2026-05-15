@@ -1,3 +1,10 @@
+import { db } from './firebase.js';
+
+import {
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const ctx = document.getElementById('salesChart');
 
 new Chart(ctx, {
@@ -19,15 +26,57 @@ document
   const file = e.target.files[0];
 
   Papa.parse(file, {
+
     header:true,
 
-    complete:function(results){
+    complete: async function(results){
 
       console.log(results.data);
 
-      alert('CSV berhasil dibaca');
+      let totalUpload = 0;
+
+      for(const item of results.data){
+
+        if(!item.Item) continue;
+
+        try{
+
+          await addDoc(collection(db, "sales"), {
+
+            date: item.Date || "",
+
+            sku: item.Item || "",
+
+            itemName: item["Item Name"] || "",
+
+            department: item.Department || "",
+
+            departmentName: item["Department Desc"] || "",
+
+            qty: Number(item["Sales Qty"]) || 0,
+
+            amount: Number(item["Sales Amount"]) || 0,
+
+            createdAt: new Date()
+
+          });
+
+          totalUpload++;
+
+          console.log("Uploaded:", item.Item);
+
+        }catch(error){
+
+          console.error(error);
+
+        }
+
+      }
+
+      alert(totalUpload + " data berhasil upload ke Firebase");
 
     }
+
   });
 
 });
