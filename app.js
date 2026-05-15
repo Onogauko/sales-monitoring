@@ -40,7 +40,8 @@ document
 
       const rows = results.data.slice(9);
 
-      const chunkSize = 500;
+      // lebih kecil supaya tidak kena quota
+      const chunkSize = 200;
 
       for(let i = 0; i < rows.length; i += chunkSize){
 
@@ -50,6 +51,7 @@ document
 
         for(const row of chunk){
 
+          // skip row kosong
           if(!row[5]) continue;
 
           const docRef = doc(collection(db, "sales"));
@@ -86,13 +88,21 @@ document
 
         }
 
+        // upload batch
         await batch.commit();
 
+        // delay supaya tidak kena quota firestore
+        await new Promise(resolve =>
+          setTimeout(resolve, 1000)
+        );
+
+        // update progress
         const percent =
         Math.floor((totalUpload / rows.length) * 100);
 
         progressText.innerText =
-        percent + "% Uploading... (" +
+        percent +
+        "% Uploading... (" +
         totalUpload +
         "/" +
         rows.length +
